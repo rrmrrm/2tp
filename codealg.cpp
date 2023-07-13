@@ -38,3 +38,11 @@ string decode(const string& aCode, const string& aKey){
     }
     return decoded;
 }
+
+string calcKey(const string& aCode, const string& aMessage){
+    // since  m = c-k <=> k = c-m,
+    //  and decode(a,b) = a-b :
+    //    decode(c,m) = c-m = k
+    // so the decoding can be used for calculating the key
+    return decode(aCode, aMessage);
+}
