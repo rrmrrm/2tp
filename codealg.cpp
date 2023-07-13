@@ -1,5 +1,5 @@
 #include "codealg.h"
-
+#include <iostream>
 #include <assert.h>
 
 int charToInt(char c){
@@ -12,11 +12,15 @@ int charToInt(char c){
 char intToChar(int val){
     if(val == 26)
         return ' ';
-    assert(val >= 0 && val <= 25);
+    if(val < 0 || val > 25){
+        std::cerr << "error: invalid character code:" << val << std::endl;
+        assert(val >= 0 && val <= 25);
+    }
     char c = (int)'a' + val;
     return c;
 }
 string encode(const string& aMessage, const string& aKey){
+    assert(aMessage.size() <= aKey.size());
     string code = aMessage;
     for(int i = 0 ; i < aMessage.size() ; ++i){
         int valCode = charToInt(aKey.at(i));
@@ -28,11 +32,12 @@ string encode(const string& aMessage, const string& aKey){
     return code;
 }
 string decode(const string& aCode, const string& aKey){
+    assert(aCode.size() <= aKey.size());
     string decoded = aCode;
     for(int i = 0 ; i < aCode.size() ; ++i){
-        int valCode = charToInt(aKey.at(i));
-        int valKey = charToInt(aCode.at(i));
-        int codeVal = (valCode - valKey) % 27;
+        int valCode = charToInt(aCode.at(i));
+        int valKey = charToInt(aKey.at(i));
+        int codeVal = (valCode - valKey + 27) % 27;
         // get the character from the character's code:
         decoded.at(i) = intToChar(codeVal);
     }
