@@ -11,13 +11,21 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
-add_executable(Main 
+add_executable(Main
+    logging.h
+    logging.cpp
+    wordTree.h
+    wordTree.cpp
     codealg.h
     codealg.cpp
     main.cpp
 )
 
 add_executable(CodealgTest
+    logging.h
+    logging.cpp
+    wordTree.h
+    wordTree.cpp
     codealg.h
     codealg.cpp
     codealgTest.cpp

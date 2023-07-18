@@ -1,6 +1,6 @@
 #include "codealg.h"
 #include <gtest/gtest.h>
-
+using namespace codealg;
 TEST(shouldpass, shouldpass){
     EXPECT_TRUE(true);
 }
