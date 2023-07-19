@@ -1,6 +1,7 @@
 #include "wordTree.h"
 
 #include "codealg.h"
+#include "logging.h"
 
 #include <assert.h>
 // Node for building a tree of the word
@@ -13,7 +14,12 @@ Node::Node(){
     }
 }
 Node* Node::nodeAtInd(int aInd) const {
-    assert(aInd>=0 && aInd < CHILD_MAX);
+    if(aInd<0 || aInd >= CHILD_MAX){
+        LOG_deb("error-deb: Node::nodeAtInd: invalid aInd: '"
+                << aInd << "'" )
+        LOG_error("error: (see debug log if exists)")
+        assert(false);
+    }
     return mChildren[aInd];
 }
 Node* Node::nodeAtChar(char aChar) const {

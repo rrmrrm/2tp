@@ -5,6 +5,8 @@
 namespace logging{
 TABT& TABT::operator+=(int inc){
     s += inc;
+    if(s < 0)
+        s = 0;
     return *this;
 }
 TABT& TABT::operator-=(int decr){
@@ -19,6 +21,5 @@ std::ostream& operator<<(std::ostream& os, const TABT& t){
     }
     return os;
 }
-//definition for TAB declaration in the header file
-TABT TAB;
-}
+TABT DEB_TAB;
+} // namespace logging

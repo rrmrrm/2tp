@@ -6,10 +6,13 @@ using std::string;
 
 namespace codealg{
 // calculates the code aMessage using aKey as key (encoding)
+// if aMessage is longer than aKey, then exits while logging an error
 string encode(const string& aMessage, const string& aKey);
 // returns the message from aCode and aKey (solving for code)
+// if aCode is longer than aKey, then exits while logging an error
 string decode(const string& aCode, const string& aKey);
 // returns the key from aCode and aMessage (solving for key)
+// the returned key will be as long as the shorter parameter
 string calcKey(const string& aCode, const string& aMessage);
 
 

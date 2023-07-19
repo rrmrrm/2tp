@@ -4,16 +4,11 @@
 #include "wordTree.h"
 
 #include <assert.h>
-#include <cstdlib>
+#include <cstdlib> // std::getenv
 #include <fstream>
-#include <iostream>
 #include <vector>
 
-using std::cout;
-using std::endl;
 using std::string;
-using std::ostream;
-using logging::TAB;
 using wordTree::Node;
 
 namespace codealg{
@@ -22,7 +17,11 @@ int charToInt(char c){
     int ascii = (int)c;
     if(ascii == (int)' ')
         return 26;
-    assert(ascii >= (int)'a' && ascii <= (int)'z');
+    if(ascii < (int)'a' || ascii > (int)'z'){
+        LOG_deb("error-deb: charToInt: invalid character: '" << c << "'")
+        LOG_error("error: (see debug log if exists)")
+        assert(false);
+    }
     return ascii - (int)'a';
 }
 
@@ -30,14 +29,22 @@ char intToChar(int aInd){
     if(aInd == 26)
         return ' ';
     if(aInd < 0 || aInd > 25){
-        std::cerr << "error: invalid character character-index:" << aInd << std::endl;
-        assert(aInd >= 0 && aInd <= 25);
+        LOG_deb("error-deb: intToChar: invalid character character-index:" << aInd)
+        LOG_error("error: (see debug log if exists)")
+        assert(false);
     }
     char c = (int)'a' + aInd;
     return c;
 }
 string encode(const string& aMessage, const string& aKey){
-    assert(aMessage.size() <= aKey.size());
+    if(aMessage.size() > aKey.size()){
+        LOG_deb("error-deb: encode: aMessage.size (" 
+            << aMessage.size() 
+            << ") was larger than key.size (" 
+            << aKey.size() << ")")
+        LOG_error("error: (see debug log if exists)")
+        assert(false);
+    }
     string code = aMessage;
     for(int i = 0 ; i < aMessage.size() ; ++i){
         int valCode = charToInt(aKey.at(i));
@@ -49,7 +56,14 @@ string encode(const string& aMessage, const string& aKey){
     return code;
 }
 string decode(const string& aCode, const string& aKey){
-    assert(aCode.size() <= aKey.size());
+    if(aCode.size() > aKey.size()){
+        LOG_deb("error-deb: encode: aCode.size (" 
+            << aCode.size() 
+            << ") was larger than key.size (" 
+            << aKey.size() << ")")
+        LOG_error("error: (see debug log if exists)")
+        assert(false);
+    }
     string decoded = aCode;
     for(int i = 0 ; i < aCode.size() ; ++i){
         int valCode = charToInt(aCode.at(i));
@@ -81,18 +95,18 @@ string calcKey(const string& aCode, const string& aMessage){
 /// @return assuming both aCode and aOtherCode were created with the same key: 
 ///    returns the characterIndex of the second message
 int expectedCharInd(char aMsgChar, char aCode, char aOtherCode){
-    cout << TAB << "ExpectedCharCode(..).." << endl;
-    TAB += 1;
+    LOG_trace("ExpectedCharCode(..)..")
+    LOG_indent(1)
     int msgCharInd = charToInt(aMsgChar);
     int codeInd = charToInt(aCode);
     int otherCodeInd = charToInt(aOtherCode);
-    cout << TAB << "aMsgChar: " << aMsgChar << ". aCode: " << aCode << ")" << endl;
-    cout << TAB << "aOtherCode: " << aOtherCode << endl;
+    LOG_trace("aMsgChar: " << aMsgChar << ". aCode: " << aCode << ")")
+    LOG_trace("aOtherCode: " << aOtherCode)
     // m2Char = m1Char + code2Char - code1Char
     int expectedCharInd = (msgCharInd + otherCodeInd - codeInd + 27 ) % 27;
-    cout << TAB << "expectedChar: " << intToChar(expectedCharInd) << endl;
-    TAB -= 1;
-    cout << TAB << "ExpectedCharCode DONE" << endl;
+    LOG_trace("expectedChar: " << intToChar(expectedCharInd))
+    LOG_indent(-1)
+    LOG_trace("ExpectedCharCode DONE")
     return expectedCharInd;
 }
 
@@ -122,28 +136,26 @@ void stepNodes(
         if(next1 && (!checkSecond || next2)){
             // if charInd is 26 (' ') then a new word has to be started in the continued message
             if(nextChar1Ind == 26){
-                cout << TAB << "expecting a space here in the continued message. resetting next" << endl;
+                LOG_trace("expecting a space here in the continued message. resetting next")
                 next1 = aRoot;
             }
             bool resetSecondIfSteppingOnSpace = checkSecond;
             // if expInd is 26 (' ') then a new word has to be started in the other message
             if(resetSecondIfSteppingOnSpace &&  nextCharInd2 == 26){
-                cout << TAB << "expecting a space here in the other message. resetting otherNext" << endl;
+                LOG_trace("expecting a space here in the other message. resetting otherNext")
                 next2 = aRoot;
             }
             if(nextChar1Ind == 26 && nextCharInd2 == 26){
-                cout << TAB << "Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!" << endl;
+                LOG_trace("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
             }
             char keyChar = calcKey(string()+aCode1.at(aMatchInd), string()+nextChar1).at(0);
             
-            TAB += 3;
             findKeys(aRoot,
                     next1, next2,
                     aCode1, aCode2,
                     aMatchInd+1,
                     aKeyPrefix+keyChar,
                     aKeys);
-            TAB -= 3;
         }
     }
 }
@@ -152,39 +164,45 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
         const string& aCodeContinue, const string& aCodeOther, int aMatchInd, 
         string aKeyPrefix, 
         std::vector<string>& aKeys){
-    cout << TAB << "findKeys START... matchInd: " << aMatchInd << endl;
-
+    LOG_trace("findKeys START... matchInd: " << aMatchInd)
+    LOG_indent(3)
     //if either essage ended, then it has to end with a full word. 
     // (if both ended the same applies, but in that case we dont recurse further, just collect the keys).
     // if either ended, then i dont iterate the aContinue or aOther, just checking if they point to the end of a full word
     if(aMatchInd >= aCodeContinue.size() && !aContinue->isWord()){
-        cout << TAB << "message1 ended (at aMatchInd=" << aMatchInd << "). BUT aContinue was NOT a full word, so no keys found on this path" << endl;
-        cout << TAB << "message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
-        cout << TAB << "message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
+        LOG_trace("message1 ended (at aMatchInd=" << aMatchInd << "). BUT aContinue was NOT a full word, so no keys found on this path")
+        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("FindContin.. DONE")
+        LOG_indent(-3)
         return;
     }
     if(aMatchInd >= aCodeOther.size() && !aOther->isWord()){
-        cout << TAB << "message2 ended (at aMatchInd=" << aMatchInd << "). BUT aOther was NOT a full word, so no keys found on this path" << endl;
-        cout << TAB << "message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
-        cout << TAB << "message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
+        LOG_trace("message2 ended (at aMatchInd=" << aMatchInd << "). BUT aOther was NOT a full word, so no keys found on this path")
+        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("FindContin.. DONE")
+        LOG_indent(-3)
         return;
     }
     // both ended, so we dont recurse further, just store the new key
     if(aMatchInd >= aCodeContinue.size() && aMatchInd >= aCodeOther.size()){
-        cout << TAB << "Both messages ended (aMatchInd=" << aMatchInd << ")" << endl;
+        LOG_trace("Both messages ended (aMatchInd=" << aMatchInd << ")")
         aKeys.push_back(aKeyPrefix);
 
-        cout << TAB << "NEW msg option for message1: '" << decode(aCodeContinue, aKeyPrefix) << "'" << endl;
-        cout << TAB << "NEW msg option for message2: '" << decode(aCodeOther, aKeyPrefix) << "'" << endl;
-        cout << TAB << "NEW KEY:'" << aKeyPrefix << "'" << endl;
+        LOG_trace("NEW msg option for message1: '" << decode(aCodeContinue, aKeyPrefix) << "'")
+        LOG_trace("NEW msg option for message2: '" << decode(aCodeOther, aKeyPrefix) << "'")
+        LOG_trace("NEW KEY:'" << aKeyPrefix << "'")
+        LOG_trace("FindContin.. DONE")
+        LOG_indent(-3)
         return;
     }
     // only first message ended
     if(aMatchInd >= aCodeContinue.size()){
         // we only need to find posible endings of message2
-        cout << TAB << "message1 ended (originally ended at aMatchInd=" << aMatchInd << ")." << endl;
-        cout << TAB << "message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
-        cout << TAB << "message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
+        LOG_trace("message1 ended (originally ended at aMatchInd=" << aMatchInd << ").")
+        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
         stepNodes(
             aWordTree,
             aOther, aContinue, // note that i switched the order of the nodes (because the stepNodes will only step its aNode1 formal parameter
@@ -193,14 +211,15 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
             aKeyPrefix, aKeys,
             false // dont check end iterate first message and node
         );
-        cout << TAB << "FindContin.. DONE" << endl;
+        LOG_trace("FindContin.. DONE")
+        LOG_indent(-3)
         return;
     }
     // only second message ended
     if(aMatchInd >= aCodeOther.size()){
-        cout << TAB << "message2 ended (originally ended at aMatchInd=" << aMatchInd << ")." << endl;
-        cout << TAB << "message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
-        cout << TAB << "message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'" << endl;
+        LOG_trace("message2 ended (originally ended at aMatchInd=" << aMatchInd << ").")
+        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
         stepNodes(
             aWordTree,
             aContinue, aOther, 
@@ -209,7 +228,8 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
             aKeyPrefix, aKeys,
             false // dont check end iterate first message and node
         );
-        cout << TAB << "FindContin.. DONE" << endl;
+        LOG_trace("FindContin.. DONE")
+        LOG_indent(-3)
         return;
     }
 
@@ -234,11 +254,29 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
     //
     {
     char* fileCStr = std::getenv("WORDS_TXT_FULLPATH");
-    assert(fileCStr);
-    std::string file = std::string(fileCStr);
-    std::cout << TAB << "file name:" << file << std::endl;
+    // file that contains the words:
+    std::string file = "../words.txt";
+    // file will be initialized from fileCstr unless it was empty. 
+    if(fileCStr){
+        file = std::string(fileCStr);
+    }
+    LOG_trace("file name:" << file)
     std::ifstream wordsStream(file);
-    assert(wordsStream.is_open());
+    if(!wordsStream.is_open()){
+        // try log current working dir
+        if(auto pwd = std::getenv("PWD")){
+            LOG_deb("error-deb: findKeysWithClue: couldn't open file with the list of the words. file name: '"
+                << file << "', working directory is '" 
+                << pwd << "'")
+        }
+        else{
+            LOG_deb("error-deb: couldn't open file with the list of the words. file name: '"
+                << file << "'")
+        }
+        LOG_error("error: couldn't open file with the list of the words. file name: '"
+                << file << "'")
+        assert(false);
+    }
     std::string word;
     while(wordsStream >> word){
         Node* treeIter = wordTree;
@@ -270,30 +308,39 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
     Node* msg2Iter = wordTree;
     int i = 0;
     for( ; i < aMessage1Clue.size() ; ++i){
-        cout << TAB << "i:" << i << endl;
+        LOG_trace("i:" << i)
         char nextChar1 = aMessage1Clue.at(i);
         // calculate the other char using the [msg1 - msg2 = code1 - code2] equality
         char nextChar2 = intToChar(expectedCharInd(nextChar1, aCode1.at(i), aCode2.at(i)));
         msg1Iter = msg1Iter->nodeAtChar(nextChar1);
         msg2Iter = msg2Iter->nodeAtChar(nextChar2);
-        assert(msg1Iter);
-        assert(msg2Iter);
+
+        if(!msg1Iter){
+            LOG_deb("error-deb: findKeysWithClue: msg1Iter was null")
+            LOG_error("error: (see debug log if exists)")
+            assert(false);
+        }
+        if(!msg2Iter){
+            LOG_deb("error-deb: findKeysWithClue: msg2Iter was null")
+            LOG_error("error: (see debug log if exists)")
+            assert(false);
+        }
 
         int nextChar1Ind = charToInt(nextChar1);
         int nextCharInd2 = -1;
         // if charInd is 26 (' ') then a new word has to be started in the continued message
         if(nextChar1Ind == 26){
-            cout << TAB << "expecting a space here in the continued message. resetting next" << endl;
+            LOG_trace("expecting a space here in the continued message. resetting next")
             msg1Iter = wordTree;
         }
         // if expInd is 26 (' ') then a new word has to be started in the other message
         if(nextCharInd2 == 26){
-            cout << TAB << "expecting a space here in the other message. resetting otherNext" << endl;
+            LOG_trace("expecting a space here in the other message. resetting otherNext")
             msg2Iter = wordTree;
         }
         // both words might have a space at this place, meaning we continue from the root
         if(nextChar1Ind == 26 && nextCharInd2 == 26){
-            cout << TAB << "Both messages can end here. (index = " << i << ") continuing by trying all words at the remaining part. Might take a while!" << endl;
+            LOG_trace("Both messages can end here. (index = " << i << ") continuing by trying all words at the remaining part. Might take a while!")
         }
     }
     // note aMessage1Clue migh be longer than message2
