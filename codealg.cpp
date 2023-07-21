@@ -119,7 +119,7 @@ void stepNodes(
         Node* aNode1, Node* aNode2, 
         const string& aCode1, const string& aCode2, 
         int aMatchInd,
-        string aKeyPrefix, 
+        const string& aKeyPrefix,
         std::vector<string>& aKeys,
         bool checkSecond //marks whether we should calculate the next step fore aNode2
         ){
@@ -146,7 +146,7 @@ void stepNodes(
                 next2 = aRoot;
             }
             if(nextChar1Ind == 26 && nextCharInd2 == 26){
-                LOG_trace("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
+                LOG_warn("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
             }
             char keyChar = calcKey(string()+aCode1.at(aMatchInd), string()+nextChar1).at(0);
             
@@ -242,6 +242,8 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
         aKeyPrefix, aKeys,
         true // iterate both messages and nodes
     );
+    LOG_trace("FindContin.. DONE")
+    LOG_indent(-3)
 }
 
 std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2, const string& aMessage1Clue){
@@ -312,35 +314,36 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
         char nextChar1 = aMessage1Clue.at(i);
         // calculate the other char using the [msg1 - msg2 = code1 - code2] equality
         char nextChar2 = intToChar(expectedCharInd(nextChar1, aCode1.at(i), aCode2.at(i)));
-        msg1Iter = msg1Iter->nodeAtChar(nextChar1);
-        msg2Iter = msg2Iter->nodeAtChar(nextChar2);
-
+        
         if(!msg1Iter){
             LOG_deb("error-deb: findKeysWithClue: msg1Iter was null")
-            LOG_error("error: (see debug log if exists)")
+            LOG_error("error: while iterating clue (see debug log if exists)")
             assert(false);
         }
         if(!msg2Iter){
             LOG_deb("error-deb: findKeysWithClue: msg2Iter was null")
-            LOG_error("error: (see debug log if exists)")
+            LOG_error("error: while iterating clue (see debug log if exists)")
             assert(false);
         }
 
+        msg1Iter = msg1Iter->nodeAtChar(nextChar1);
+        msg2Iter = msg2Iter->nodeAtChar(nextChar2);
+
         int nextChar1Ind = charToInt(nextChar1);
-        int nextCharInd2 = -1;
+        int nextChar2Ind = charToInt(nextChar2);
         // if charInd is 26 (' ') then a new word has to be started in the continued message
         if(nextChar1Ind == 26){
             LOG_trace("expecting a space here in the continued message. resetting next")
             msg1Iter = wordTree;
         }
         // if expInd is 26 (' ') then a new word has to be started in the other message
-        if(nextCharInd2 == 26){
+        if(nextChar2Ind == 26){
             LOG_trace("expecting a space here in the other message. resetting otherNext")
             msg2Iter = wordTree;
         }
         // both words might have a space at this place, meaning we continue from the root
-        if(nextChar1Ind == 26 && nextCharInd2 == 26){
-            LOG_trace("Both messages can end here. (index = " << i << ") continuing by trying all words at the remaining part. Might take a while!")
+        if(nextChar1Ind == 26 && nextChar2Ind == 26){
+            LOG_deb("Both messages can end here. (index = " << i << ") continuing by trying all words at the remaining part. Might take a while!")
         }
     }
     // note aMessage1Clue migh be longer than message2
@@ -354,7 +357,7 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
         calcKey(aCode1, aMessage1Clue),
         possibleKeys
     );
-
+    delete wordTree;
     return possibleKeys;
 }
 } // codealg
