@@ -112,56 +112,6 @@ TEST(CodeAlg, calcKeyLongMessage){
     string key = calcKey(code, message);
     EXPECT_EQ(key , "helloworld");
 }
-/// @brief
-/// test wheter findKeysWithClue finds the original key
-/// given messages with different
-TEST(CodeAlg, findKeysWithClue_msg_len_differs1){
-    string key =  "the world was young the mountains green";
-    string clue_msg1 =
-                  "all y";
-    string msg1 = "all yours base belong to us";
-    string code1 = encode(msg1, key);
-    string msg2 = "a winner is you";
-    string code2 = encode(msg2, key);
-    LOG_deb("Original codes and parameters:" << std::endl
-            << "key  '" << key << "'" << std::endl
-            << "msg1: '" << msg1 << "'" << std::endl
-            << "code1:'" << code1 << "'" << std::endl
-            << "msg2: '" << msg2 << "'" << std::endl
-            << "code2: '" << code2 << "'" << std::endl
-            << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
-    // key shouldn't overiterate keys
-    ASSERT_NE(foundIt, keys.end());
-    // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
-}
-///// @brief
-///// test wheter findKeysWithClue finds the original key
-///// given messages with different length
-//TEST(CodeAlg, findKeysWithClue_msg_len_differs){
-//    string key =  "the world was young the mountains green";
-//    string clue_msg1 =
-//                  "all y";
-//    string msg1 = "all your base belong to us";
-//    string code1 = encode(msg1, key);
-//    string msg2 = "a winner is you";
-//    string code2 = encode(msg2, key);
-//    LOG_deb("Original codes and parameters:" << std::endl
-//            << "key  '" << key << "'" << std::endl
-//            << "msg1: '" << msg1 << "'" << std::endl
-//            << "code1:'" << code1 << "'" << std::endl
-//            << "msg2: '" << msg2 << "'" << std::endl
-//            << "code2: '" << code2 << "'" << std::endl
-//            << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-//    auto keys = findKeysWithClue(code1, code2, clue_msg1);
-//    auto foundIt = std::find(keys.begin(), keys.end(), key);
-//    // key shouldn't overiterate keys
-//    ASSERT_NE(foundIt, keys.end());
-//    // make sure the found key really is the original key
-//    EXPECT_EQ(*foundIt, key);
-//}
 
 /// @brief
 /// test wheter findKeysWithClue finds the original key
@@ -182,11 +132,12 @@ TEST(CodeAlg, findKeysWithClue_msg_len_eq){
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
     auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
+    EXPECT_EQ(*foundIt, subKey);
 }
 
 /// @brief
@@ -208,11 +159,12 @@ TEST(CodeAlg, findKeysWithClue_clue_short){
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
     auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
+    EXPECT_EQ(*foundIt, subKey);
 }
 /// @brief
 /// test wheter findKeysWithClue finds the original key
@@ -233,11 +185,12 @@ TEST(CodeAlg, findKeysWithClue_clue_empty){
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
     auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
+    EXPECT_EQ(*foundIt, subKey);
 }
 
 /// @brief
@@ -259,11 +212,12 @@ TEST(CodeAlg, findKeysWithClue_clue_same_length){
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
     auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
+    EXPECT_EQ(*foundIt, subKey);
 }
 
 /// @brief
@@ -285,11 +239,12 @@ TEST(CodeAlg, findKeysWithClue_clue_long){
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
     auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
+    EXPECT_EQ(*foundIt, subKey);
 }
 
 /// @brief
@@ -311,9 +266,62 @@ TEST(CodeAlg, findKeysWithClue_both_space_after_clue){
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
     auto keys = findKeysWithClue(code1, code2, clue_msg1);
-    auto foundIt = std::find(keys.begin(), keys.end(), key);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
-    EXPECT_EQ(*foundIt, key);
+    EXPECT_EQ(*foundIt, subKey);
+}
+/// @brief
+/// test wheter findKeysWithClue finds the original key
+/// given messages with different
+TEST(CodeAlg, findKeysWithClue_msg_len_differs1){
+    string key =  "the world was young the mountains green";
+    string clue_msg1 =
+                  "all y";
+    string msg1 = "all yours base belong to us";
+    string code1 = encode(msg1, key);
+    string msg2 = "a winner is you";
+    string code2 = encode(msg2, key);
+    LOG_deb("Original codes and parameters:" << std::endl
+            << "key  '" << key << "'" << std::endl
+            << "msg1: '" << msg1 << "'" << std::endl
+            << "code1:'" << code1 << "'" << std::endl
+            << "msg2: '" << msg2 << "'" << std::endl
+            << "code2: '" << code2 << "'" << std::endl
+            << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
+    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
+    // key shouldn't overiterate keys
+    ASSERT_NE(foundIt, keys.end());
+    // make sure the found key really is the original key
+    EXPECT_EQ(*foundIt, subKey);
+}
+/// @brief
+/// test wheter findKeysWithClue finds the original key
+/// given messages with different length
+TEST(CodeAlg, findKeysWithClue_msg_len_differs){
+    string key =  "the world was young the mountains green";
+    string clue_msg1 =
+                  "all y";
+    string msg1 = "all your base belong to us";
+    string code1 = encode(msg1, key);
+    string msg2 = "a winner is you";
+    string code2 = encode(msg2, key);
+    LOG_deb("Original codes and parameters:" << std::endl
+            << "key  '" << key << "'" << std::endl
+            << "msg1: '" << msg1 << "'" << std::endl
+            << "code1:'" << code1 << "'" << std::endl
+            << "msg2: '" << msg2 << "'" << std::endl
+            << "code2: '" << code2 << "'" << std::endl
+            << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
+    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    string subKey = key.substr(0, msg2.size());
+    auto foundIt = std::find(keys.begin(), keys.end(), subKey);
+    // key shouldn't overiterate keys
+    ASSERT_NE(foundIt, keys.end());
+    // make sure the found key really is the original key
+    EXPECT_EQ(*foundIt, subKey);
 }
