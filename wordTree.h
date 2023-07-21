@@ -27,6 +27,7 @@ class Node{
     char mChar = '-';
 public:
     Node();
+    ~Node();
     Node* nodeAtInd(int aInd) const ;
     Node* nodeAtChar(char aChar) const;
     Node* addNodeAtChar(char aChar, Node* aNewNode);

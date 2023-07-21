@@ -24,7 +24,7 @@ using std::endl;
 ///   error,warn,info,deb,trace are the severity levels in decreasing order. 
 ///   (their severities are  5,4,3,2,1 in order)
 ///   logs that have a severity level below LOG_SEVERITY won't be printed.
-#define LOG_SEVERITY 3
+#define LOG_SEVERITY 2
 #define LOG_error(asd) (LOG_SEVERITY>5 ? cout << "" : cout << asd << endl);
 #define LOG_warn(asd) (LOG_SEVERITY>4 ? cout << "" : cout << asd << endl);
 #define LOG_info(asd) (LOG_SEVERITY>3 ? cout << "" : cout << asd << endl);

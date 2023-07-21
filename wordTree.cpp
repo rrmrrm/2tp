@@ -13,6 +13,14 @@ Node::Node(){
         mChildren[i] = nullptr;
     }
 }
+Node::~Node(){
+    for(int i = 0 ; i < CHILD_MAX ; ++i){
+        if(auto child = nodeAtInd(i)){
+            delete child;
+            mChildren[i] = nullptr;
+        }
+    }
+}
 Node* Node::nodeAtInd(int aInd) const {
     if(aInd<0 || aInd >= CHILD_MAX){
         LOG_deb("error-deb: Node::nodeAtInd: invalid aInd: '"
