@@ -19,7 +19,7 @@ int charToInt(char c){
         return 26;
     if(ascii < (int)'a' || ascii > (int)'z'){
         LOG_deb("error-deb: charToInt: invalid character: '" << c << "'")
-        LOG_error("error: (see debug log if exists)")
+        LOG_error("error: charToInt (see debug log if exists)")
         assert(false);
     }
     return ascii - (int)'a';
@@ -30,7 +30,7 @@ char intToChar(int aInd){
         return ' ';
     if(aInd < 0 || aInd > 25){
         LOG_deb("error-deb: intToChar: invalid character character-index:" << aInd)
-        LOG_error("error: (see debug log if exists)")
+        LOG_error("error: intToChar (see debug log if exists)")
         assert(false);
     }
     char c = (int)'a' + aInd;
@@ -42,7 +42,7 @@ string encode(const string& aMessage, const string& aKey){
             << aMessage.size() 
             << ") was larger than key.size (" 
             << aKey.size() << ")")
-        LOG_error("error: (see debug log if exists)")
+        LOG_error("error: encode (see debug log if exists)")
         assert(false);
     }
     string code = aMessage;
@@ -61,7 +61,7 @@ string decode(const string& aCode, const string& aKey){
             << aCode.size() 
             << ") was larger than key.size (" 
             << aKey.size() << ")")
-        LOG_error("error: (see debug log if exists)")
+        LOG_error("error: decode (see debug log if exists)")
         assert(false);
     }
     string decoded = aCode;
@@ -113,7 +113,10 @@ int expectedCharInd(char aMsgChar, char aCode, char aOtherCode){
 void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
         const string& aCodeContinue, const string& aCodeOther, int aMatchInd, 
         string aKeyPrefix, 
-        std::vector<string>& aKeys);
+        std::vector<string>& aKey,
+        const long long int& maxSteps,
+        long long int& aStep,
+        const long long int& maxKeys);
 void stepNodes(
         Node* aRoot,
         Node* aNode1, Node* aNode2, 
@@ -121,6 +124,9 @@ void stepNodes(
         int aMatchInd,
         const string& aKeyPrefix,
         std::vector<string>& aKeys,
+        const long long int& maxSteps,
+        long long int& aStep,
+        const long long int& maxKeys,
         bool checkSecond //marks whether we should calculate the next step fore aNode2
         ){
     for(int nextChar1Ind = 0 ; nextChar1Ind < 27 ; ++nextChar1Ind){
@@ -155,7 +161,10 @@ void stepNodes(
                     aCode1, aCode2,
                     aMatchInd+1,
                     aKeyPrefix+keyChar,
-                    aKeys);
+                    aKeys,
+                    maxSteps,
+                    aStep,
+                    maxKeys);
         }
     }
 }
@@ -163,10 +172,31 @@ void stepNodes(
 void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
         const string& aCodeContinue, const string& aCodeOther, int aMatchInd, 
         string aKeyPrefix, 
-        std::vector<string>& aKeys){
+        std::vector<string>& aKeys,
+        const long long int& maxSteps,
+        long long int& aStep,
+        const long long int& maxKeys){
     LOG_trace("findKeys START... matchInd: " << aMatchInd)
     LOG_indent(3)
-    //if either essage ended, then it has to end with a full word. 
+    ///TODO: only warn first time for aKeys.size() (there are now multi warnings from different recursive paths)
+    // if we found maxKeys already, we return
+    if(aKeys.size() >= maxKeys){
+        LOG_warn("warning: found " << aKeys.size() << " keys already, which is at least the upper limit (max keys is" << maxKeys << "). not going further");
+        LOG_trace("FindContin.. DONE, because we found " << aKeys.size() << " keys. (maxKeys=" << maxKeys << ").")
+        LOG_indent(-3)
+        return;
+    }
+    ///TODO: only warn first time for aStep (there are now multi warnings from different recursive paths)
+    // if we already iterated maxStep times, we return
+    if(aStep >= maxSteps){
+        LOG_warn("warning: algorithm already did" << aStep << " iterations, which is at least the upper limit (maxSteps is " << maxSteps << "). not going further");
+        LOG_trace("FindContin.. DONE, because we iteareted " << aStep << " times. (maxSteps=" << maxSteps << ").")
+        LOG_indent(-3)
+        return;
+    }
+    ++aStep;
+
+    //if either message ended, then it has to end with a full word. 
     // (if both ended the same applies, but in that case we dont recurse further, just collect the keys).
     // if either ended, then i dont iterate the aContinue or aOther, just checking if they point to the end of a full word
     if(aMatchInd >= aCodeContinue.size() && !aContinue->isWord()){
@@ -209,6 +239,9 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
             aCodeOther, aCodeContinue,
             aMatchInd,
             aKeyPrefix, aKeys,
+            maxSteps,
+            aStep,
+            maxKeys,
             false // dont check end iterate first message and node
         );
         LOG_trace("FindContin.. DONE")
@@ -226,6 +259,9 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
             aCodeContinue, aCodeOther,
             aMatchInd,
             aKeyPrefix, aKeys,
+            maxSteps,
+            aStep,
+            maxKeys,
             false // dont check end iterate first message and node
         );
         LOG_trace("FindContin.. DONE")
@@ -240,15 +276,28 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
         aCodeContinue, aCodeOther,
         aMatchInd,
         aKeyPrefix, aKeys,
+        maxSteps,
+        aStep,
+        maxKeys,
         true // iterate both messages and nodes
     );
     LOG_trace("FindContin.. DONE")
     LOG_indent(-3)
 }
 
-std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2, const string& aMessage1Clue){
+std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2, const string& aMessage1Clue, 
+        long long int maxSteps,
+        long long int maxKeys){
     std::vector<string> possibleKeys;
     
+    // clue has to be at max as long as aCode1
+    if(aMessage1Clue.size() > aCode1.size()){
+        LOG_deb("error-deb: findKeysWithClue: aMessage1Clue arugment was longer than aCode1. aMessage1Clue.size():'"
+            << aMessage1Clue.size() << "', aCode1.size(): '" 
+            << aCode1.size() << "'")
+        LOG_error("error: findKeysWithClue: message clue was longer than code argument")
+    }
+
     int wordCnt = 0;
     Node* wordTree = new Node;
     //
@@ -272,10 +321,10 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
                 << pwd << "'")
         }
         else{
-            LOG_deb("error-deb: couldn't open file with the list of the words. file name: '"
+            LOG_deb("error-deb: findKeysWithClue: couldn't open file with the list of the words. file name: '"
                 << file << "'")
         }
-        LOG_error("error: couldn't open file with the list of the words. file name: '"
+        LOG_error("error: findKeysWithClue: couldn't open file with the list of the words. file name: '"
                 << file << "'")
         assert(false);
     }
@@ -305,24 +354,28 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
     // follow the messages in a word-tree iterators.
     //
 
+    //step counter to prevent iterating too many times
+    long long int step = 0;
     //word-tree iterators:
     Node* msg1Iter = wordTree;
     Node* msg2Iter = wordTree;
     int i = 0;
     for( ; i < aMessage1Clue.size() ; ++i){
         LOG_trace("i:" << i)
+        // count clue iterating steps too against maxStepLimit(not just the recursive steps)
+        ++step;
         char nextChar1 = aMessage1Clue.at(i);
         // calculate the other char using the [msg1 - msg2 = code1 - code2] equality
         char nextChar2 = intToChar(expectedCharInd(nextChar1, aCode1.at(i), aCode2.at(i)));
         
         if(!msg1Iter){
             LOG_deb("error-deb: findKeysWithClue: msg1Iter was null")
-            LOG_error("error: while iterating clue (see debug log if exists)")
+            LOG_error("error: findKeysWithClue: while iterating clue (see debug log if exists)")
             assert(false);
         }
         if(!msg2Iter){
             LOG_deb("error-deb: findKeysWithClue: msg2Iter was null")
-            LOG_error("error: while iterating clue (see debug log if exists)")
+            LOG_error("error: findKeysWithClue: while iterating clue (see debug log if exists)")
             assert(false);
         }
 
@@ -355,7 +408,10 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
         wordTree, msg2Iter, msg1Iter,
         aCode2, aCode1, i,
         calcKey(aCode1, aMessage1Clue),
-        possibleKeys
+        possibleKeys,
+        maxSteps,
+        step,
+        maxKeys
     );
     delete wordTree;
     return possibleKeys;

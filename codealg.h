@@ -21,7 +21,12 @@ string calcKey(const string& aCode, const string& aMessage);
 /// @param aCode2 // second code
 /// @param aMessage1Clue the start of message1
 /// @return possible keys assuming the first message starts with aMessage1Clue 
-std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2, const string& aMessage1Start);
+std::vector<string> findKeysWithClue(
+    const string& aCode1,
+    const string& aCode2,
+    const string& aMessage1Start,
+    long long int maxSteps,
+    long long int maxKeys);
 
 
 //

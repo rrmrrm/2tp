@@ -131,7 +131,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_eq){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -158,7 +158,7 @@ TEST(CodeAlg, findKeysWithClue_clue_short){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -184,7 +184,7 @@ TEST(CodeAlg, findKeysWithClue_clue_empty){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -211,7 +211,7 @@ TEST(CodeAlg, findKeysWithClue_clue_same_length){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -238,7 +238,7 @@ TEST(CodeAlg, findKeysWithClue_clue_long){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -265,7 +265,7 @@ TEST(CodeAlg, findKeysWithClue_both_space_after_clue){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -292,7 +292,7 @@ TEST(CodeAlg, findKeysWithClue_msg_long){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     int keyLen = std::max(msg1.size(), msg2.size());
     string subKey = key.substr(0, keyLen);
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
@@ -320,7 +320,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs1){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
     // key shouldn't overiterate keys
@@ -346,7 +346,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs2){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     int keyLen = std::max(msg1.size(), msg2.size());
     string subKey = key.substr(0, keyLen);
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
@@ -374,7 +374,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs3){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     int keyLen = std::max(msg1.size(), msg2.size());
     string subKey = key.substr(0, keyLen);
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
