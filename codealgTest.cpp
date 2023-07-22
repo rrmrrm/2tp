@@ -2,8 +2,13 @@
 #include "logging.h"
 
 #include <gtest/gtest.h>
+
 #include <algorithm>
+#include <cstdlib> // std::getenv
+#include <stdlib.h> // srand, rand
 #include <iostream>
+#include <fstream>
+#include <unordered_set>
 
 using namespace codealg;
 TEST(shouldpass, shouldpass){
@@ -134,7 +139,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_eq){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -161,7 +166,7 @@ TEST(CodeAlg, findKeysWithClue_clue_short){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -187,7 +192,7 @@ TEST(CodeAlg, findKeysWithClue_clue_empty){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -214,7 +219,7 @@ TEST(CodeAlg, findKeysWithClue_clue_same_length){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -241,7 +246,7 @@ TEST(CodeAlg, findKeysWithClue_clue_long){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -268,7 +273,7 @@ TEST(CodeAlg, findKeysWithClue_both_space_after_clue){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -296,7 +301,7 @@ TEST(CodeAlg, findKeysWithClue_msg_long){
     int keyLen = std::max(msg1.size(), msg2.size());
     string subKey = key.substr(0, keyLen);
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -323,7 +328,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs1){
     auto keys = findKeysWithClue(code1, code2, clue_msg1, 10000000, 1000000);
     string subKey = key.substr(0, msg2.size());
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -350,7 +355,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs2){
     int keyLen = std::max(msg1.size(), msg2.size());
     string subKey = key.substr(0, keyLen);
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
@@ -378,10 +383,196 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs3){
     int keyLen = std::max(msg1.size(), msg2.size());
     string subKey = key.substr(0, keyLen);
     auto foundIt = std::find(keys.begin(), keys.end(), subKey);
-    // key shouldn't overiterate keys
+    // foundIt shouldn't overiterate keys
     ASSERT_NE(foundIt, keys.end());
     // make sure the found key really is the original key
     EXPECT_EQ(*foundIt, subKey);
+}
+
+/// @brief 
+/// generates a random aLen long string with a-z and space characters
+/// @param aLen 
+/// @return 
+string randStr(int aLen){
+    string ret;
+    for(int i = 0 ; i < aLen ; ++i){
+        ret.push_back(intToChar(rand()%27));
+    }
+    return ret;
+}
+
+/// @brief 
+/// generates a string that's around aMsgBallpark long and consists of elements of aWords
+/// the generated string might be longer than aMsgBallpark
+/// @param aMsgBallpark 
+/// @param aWords 
+/// @return 
+string genMessage(int aMsgBallpark, std::vector<string> aWords){
+    int len = 0;
+    string message;
+    bool firstWord = true;
+    while(len < aMsgBallpark){
+        // insert space between words
+        if(firstWord){
+            firstWord = false;
+        }
+        else{
+            message.push_back(' ');
+            len += 1;
+        }
+
+        int ind = rand() % aWords.size();
+        message += aWords.at(ind);
+        len += aWords.at(ind).size();
+    }
+    return message;
+}
+TEST(CodeAlg, findKeysWithClue_generated_good_keys_only){
+    //
+    // read the words from a file into containers
+    //
+    std::unordered_set<string> words; // for checking if a string is a valid word
+    std::vector<string> wordsVector; // for generating syntactically correct messages
+    {
+    char* fileCStr = std::getenv("WORDS_TXT_FULLPATH");
+    // file that contains the words:
+    std::string file = "../words.txt";
+    // file will be initialized from fileCstr unless it was empty. 
+    if(fileCStr){
+        file = std::string(fileCStr);
+    }
+    LOG_trace("file name:" << file)
+    std::ifstream wordsStream(file);
+    if(!wordsStream.is_open()){
+        // try log current working dir
+        if(auto pwd = std::getenv("PWD")){
+            LOG_deb("error-deb: TEST(CodeAlg, findKeysWithClue_generated_good_keys_only: couldn't open file with the list of the words. file name: '"
+                << file << "', working directory is '" 
+                << pwd << "'")
+        }
+        else{
+            LOG_deb("error-deb: TEST(CodeAlg, findKeysWithClue_generated_good_keys_only: couldn't open file with the list of the words. file name: '"
+                << file << "'")
+        }
+        LOG_error("error: TEST(CodeAlg, findKeysWithClue_generated_good_keys_only: couldn't open file with the list of the words. file name: '"
+                << file << "'")
+        assert(false);
+    }
+    std::string word;
+    while(wordsStream >> word){
+        words.insert(word);
+        wordsVector.push_back(word);
+    }
+    wordsStream.close();
+    }
+
+    //
+    // generate key, code1, code2 triplets and test findKeysWithClue on them
+    //
+    srand(0);
+    int tests = 100;
+    int maxMsgLen = 1000;
+
+    for(int i = 0 ; i < tests ; ++i){
+        LOG_deb("TEST(CodeAlg, findKeysWithClue_generated_good_keys_only):" << i << ". test")
+        // the generated message1 will have around msg1Ballpark characters in it
+        //  Note: actual messageLength might differ by the longest word's length
+        int msg1Ballpark = rand() % maxMsgLen;
+        int msg2Ballpark = rand() % maxMsgLen;
+        string msg1 = genMessage(msg1Ballpark, wordsVector);
+        string msg2 = genMessage(msg2Ballpark, wordsVector);
+        int msg1Len = msg1.size();
+        int msg2Len = msg2.size();
+        int keyLen = std::max(msg1Len, msg2Len) + (rand()%100); // key can be longer than both messages
+        string key =  randStr(keyLen);
+        int clueLen = rand() % (msg1Len+1); // clueLen is in [0, msg1Len] interval
+        string clue_msg1 = msg1.substr(0, clueLen);
+        string code1 = encode(msg1, key);
+        string code2 = encode(msg2, key);
+        int maxSteps = rand() % 100000;
+        int maxKeys =  rand() % 100000;
+        LOG_deb("Original codes and parameters:" << std::endl
+                << "key  '" << key << "'" << std::endl
+                << "msg1: '" << msg1 << "'" << std::endl
+                << "code1:'" << code1 << "'" << std::endl
+                << "msg2: '" << msg2 << "'" << std::endl
+                << "code2: '" << code2 << "'" << std::endl
+                << "clue for msg1: '" << clue_msg1 << "'" << std::endl
+                << "maxSteps: '" << maxSteps << "'" << std::endl
+                << "maxKeys: '" << maxKeys << "'" << std::endl)
+        auto keys = findKeysWithClue(code1, code2, clue_msg1, maxSteps, maxKeys);
+        LOG_deb("found: " << keys.size() << " keys" << std::endl)
+
+        // since at this stage findKeysWithClue usually DOESN't finds the original key, 
+        // i dont test for that, just put a warning here. so it shows up but doesnt hide any other failures
+        int keyRelevantLen = std::max(msg1.size(), msg2.size());
+        string subKey = key.substr(0, keyRelevantLen);
+        auto foundIt = std::find(keys.begin(), keys.end(), subKey);
+        if(foundIt == keys.end()){
+            LOG_warn("warning: findKeysWithClue didn't find the original key")
+        }
+        //
+        // test if encoding with found keys yields sentence-pairs(message-pairs) that are:
+        //   and the first message starts with msg1Clue, 
+        //   and syntactically correct,
+        //
+        for(const auto& keyIt: keys){
+            auto decoded1 = decode(code1, keyIt);
+            auto decoded2 = decode(code2, keyIt);
+            // test whether first message starts with the message clue
+            EXPECT_EQ(decoded1.substr(0, clueLen), clue_msg1);
+            // test syntactical correctness of decoded first message:
+            if(decoded1.size()){
+                // splitDecoded is decoded1 split into words
+                std::vector<string> splitDecoded;
+                std::string wordStump;
+                for(char c : decoded1){
+                    if(c == ' '){
+                        splitDecoded.push_back(wordStump);
+                        wordStump = "";
+                    }
+                    else{
+                        wordStump.push_back(c);
+                    }
+                }
+                // insert last wordStump
+                splitDecoded.push_back(wordStump);
+                for(const string& splitDecodedIt: splitDecoded){
+                    bool wordValid = words.count(splitDecodedIt);
+                    EXPECT_TRUE(wordValid);
+                }
+                
+            }
+            else{
+                LOG_warn("warning!: TEST(CodeAlg, findKeysWithClue_generated_good_keys_only): decoded1 was empty. wont do syntactic check");
+            }
+            // test syntactical correctness of decoded second message:
+            if(decoded2.size()){
+                // splitDecoded is decoded1 split into words
+                std::vector<string> splitDecoded;
+                std::string wordStump;
+                for(char c : decoded2){
+                    if(c == ' '){
+                        splitDecoded.push_back(wordStump);
+                        wordStump = "";
+                    }
+                    else{
+                        wordStump.push_back(c);
+                    }
+                }
+                // insert last wordStump
+                splitDecoded.push_back(wordStump);
+                for(const string& splitDecodedIt: splitDecoded){
+                    bool wordValid = words.count(splitDecodedIt);
+                    EXPECT_TRUE(wordValid);
+                }
+            }
+            else{
+                LOG_warn("warning!: TEST(CodeAlg, findKeysWithClue_generated_good_keys_only): decoded2 was empty. wont do syntactic check");
+            }
+            
+        }
+    }
 }
 /// TODO: generated tests
 /// TODO: keys  only encode valid messages(words from the file) and they also encode finds keyLen long part of the key

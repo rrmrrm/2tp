@@ -110,9 +110,9 @@ int expectedCharInd(char aMsgChar, char aCode, char aOtherCode){
     return expectedCharInd;
 }
 
-void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
-        const string& aCodeContinue, const string& aCodeOther, int aMatchInd, 
-        string aKeyPrefix, 
+void findKeys(Node* aWordTree, Node* aNode1, Node* aNode2,
+        const string& aCode1, const string& aCode2, int aMatchInd, 
+        string& aKeyPrefix, 
         std::vector<string>& aKey,
         const long long int& maxSteps,
         long long int& aStep,
@@ -122,12 +122,12 @@ void stepNodes(
         Node* aNode1, Node* aNode2, 
         const string& aCode1, const string& aCode2, 
         int aMatchInd,
-        const string& aKeyPrefix,
+        string& aKeyPrefix,
         std::vector<string>& aKeys,
         const long long int& maxSteps,
         long long int& aStep,
         const long long int& maxKeys,
-        bool checkSecond //marks whether we should calculate the next step fore aNode2
+        bool checkSecond //marks whether we should calculate the next step for aNode2
         ){
     for(int nextChar1Ind = 0 ; nextChar1Ind < 27 ; ++nextChar1Ind){
         char nextChar1 = intToChar(nextChar1Ind);
@@ -140,57 +140,70 @@ void stepNodes(
             next2 = aNode2->nodeAtInd(nextCharInd2);
         }
         if(next1 && (!checkSecond || next2)){
-            // if charInd is 26 (' ') then a new word has to be started in the continued message
+            // if charInd is 26 (' ') then a new word has to be started in the first message
             if(nextChar1Ind == 26){
-                LOG_trace("expecting a space here in the continued message. resetting next")
+                LOG_trace("expecting a space here in the first message. resetting next")
                 next1 = aRoot;
             }
             bool resetSecondIfSteppingOnSpace = checkSecond;
             // if expInd is 26 (' ') then a new word has to be started in the other message
             if(resetSecondIfSteppingOnSpace &&  nextCharInd2 == 26){
-                LOG_trace("expecting a space here in the other message. resetting otherNext")
+                LOG_trace("expecting a space here in the second message. resetting next2")
                 next2 = aRoot;
             }
             if(nextChar1Ind == 26 && nextCharInd2 == 26){
-                LOG_warn("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
+                LOG_deb("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
             }
             char keyChar = calcKey(string()+aCode1.at(aMatchInd), string()+nextChar1).at(0);
-            
+            //append the new character we are triing
+            aKeyPrefix+=keyChar;
             findKeys(aRoot,
                     next1, next2,
                     aCode1, aCode2,
                     aMatchInd+1,
-                    aKeyPrefix+keyChar,
+                    aKeyPrefix,
                     aKeys,
                     maxSteps,
                     aStep,
                     maxKeys);
+            assert(!aKeyPrefix.empty());
+            // pop the character we appended before the (co-)recursive findKeys call
+            aKeyPrefix.pop_back();
         }
     }
 }
 
-void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
-        const string& aCodeContinue, const string& aCodeOther, int aMatchInd, 
-        string aKeyPrefix, 
+namespace{
+bool LOG_MAX_KEY_WARNED = false;
+bool LOG_MAX_STEP_WARNED = false;
+}
+void findKeys(Node* aWordTree, Node* aNode1, Node* aNode2,
+        const string& aCode1, const string& aCode2, int aMatchInd, 
+        string& aKeyPrefix, 
         std::vector<string>& aKeys,
         const long long int& maxSteps,
         long long int& aStep,
         const long long int& maxKeys){
     LOG_trace("findKeys START... matchInd: " << aMatchInd)
     LOG_indent(3)
-    ///TODO: only warn first time for aKeys.size() (there are now multi warnings from different recursive paths)
     // if we found maxKeys already, we return
     if(aKeys.size() >= maxKeys){
-        LOG_warn("warning: found " << aKeys.size() << " keys already, which is at least the upper limit (max keys is" << maxKeys << "). not going further");
-        LOG_trace("FindContin.. DONE, because we found " << aKeys.size() << " keys. (maxKeys=" << maxKeys << ").")
+        if(!LOG_MAX_KEY_WARNED){
+            LOG_warn("warning: found " << aKeys.size() << " keys already, which is at least the upper limit (max keys is" << maxKeys << "). not going further");
+            LOG_trace("FindContin.. DONE, because we found " << aKeys.size() << " keys. (maxKeys=" << maxKeys << ").")
+            LOG_MAX_KEY_WARNED = true;
+        }
         LOG_indent(-3)
         return;
     }
-    ///TODO: only warn first time for aStep (there are now multi warnings from different recursive paths)
+
     // if we already iterated maxStep times, we return
     if(aStep >= maxSteps){
-        LOG_warn("warning: algorithm already did" << aStep << " iterations, which is at least the upper limit (maxSteps is " << maxSteps << "). not going further");
-        LOG_trace("FindContin.. DONE, because we iteareted " << aStep << " times. (maxSteps=" << maxSteps << ").")
+        if(!LOG_MAX_STEP_WARNED){
+            LOG_warn("warning: algorithm already did " << aStep << " iterations, which is at least the upper limit (maxSteps is " << maxSteps << "). not going further");
+            LOG_trace("FindContin.. DONE, because we iteareted " << aStep << " times. (maxSteps=" << maxSteps << ").")
+            LOG_MAX_STEP_WARNED = true;
+        }
         LOG_indent(-3)
         return;
     }
@@ -198,45 +211,45 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
 
     //if either message ended, then it has to end with a full word. 
     // (if both ended the same applies, but in that case we dont recurse further, just collect the keys).
-    // if either ended, then i dont iterate the aContinue or aOther, just checking if they point to the end of a full word
-    if(aMatchInd >= aCodeContinue.size() && !aContinue->isWord()){
-        LOG_trace("message1 ended (at aMatchInd=" << aMatchInd << "). BUT aContinue was NOT a full word, so no keys found on this path")
-        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
-        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+    // if either ended, then i dont iterate the aNode1 or aNode2, just checking if they point to the end of a full word
+    if(aMatchInd >= aCode1.size() && !aNode1->isWord()){
+        LOG_trace("message1 ended (at aMatchInd=" << aMatchInd << "). BUT aNode1 was NOT a full word, so no keys found on this path")
+        LOG_trace("message1 solution prefix: '" << decode(aCode1.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCode2.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
         LOG_trace("FindContin.. DONE")
         LOG_indent(-3)
         return;
     }
-    if(aMatchInd >= aCodeOther.size() && !aOther->isWord()){
-        LOG_trace("message2 ended (at aMatchInd=" << aMatchInd << "). BUT aOther was NOT a full word, so no keys found on this path")
-        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
-        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+    if(aMatchInd >= aCode2.size() && !aNode2->isWord()){
+        LOG_trace("message2 ended (at aMatchInd=" << aMatchInd << "). BUT aNode2 was NOT a full word, so no keys found on this path")
+        LOG_trace("message1 solution prefix: '" << decode(aCode1.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCode2.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
         LOG_trace("FindContin.. DONE")
         LOG_indent(-3)
         return;
     }
     // both ended, so we dont recurse further, just store the new key
-    if(aMatchInd >= aCodeContinue.size() && aMatchInd >= aCodeOther.size()){
+    if(aMatchInd >= aCode1.size() && aMatchInd >= aCode2.size()){
         LOG_trace("Both messages ended (aMatchInd=" << aMatchInd << ")")
         aKeys.push_back(aKeyPrefix);
 
-        LOG_trace("NEW msg option for message1: '" << decode(aCodeContinue, aKeyPrefix) << "'")
-        LOG_trace("NEW msg option for message2: '" << decode(aCodeOther, aKeyPrefix) << "'")
+        LOG_trace("NEW msg option for message1: '" << decode(aCode1, aKeyPrefix) << "'")
+        LOG_trace("NEW msg option for message2: '" << decode(aCode2, aKeyPrefix) << "'")
         LOG_trace("NEW KEY:'" << aKeyPrefix << "'")
         LOG_trace("FindContin.. DONE")
         LOG_indent(-3)
         return;
     }
     // only first message ended
-    if(aMatchInd >= aCodeContinue.size()){
+    if(aMatchInd >= aCode1.size()){
         // we only need to find posible endings of message2
         LOG_trace("message1 ended (originally ended at aMatchInd=" << aMatchInd << ").")
-        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
-        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message1 solution prefix: '" << decode(aCode1.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCode2.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
         stepNodes(
             aWordTree,
-            aOther, aContinue, // note that i switched the order of the nodes (because the stepNodes will only step its aNode1 formal parameter
-            aCodeOther, aCodeContinue,
+            aNode2, aNode1, // note that i switched the order of the nodes (because the stepNodes will only step its aNode1 formal parameter
+            aCode2, aCode1,
             aMatchInd,
             aKeyPrefix, aKeys,
             maxSteps,
@@ -249,14 +262,14 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
         return;
     }
     // only second message ended
-    if(aMatchInd >= aCodeOther.size()){
+    if(aMatchInd >= aCode2.size()){
         LOG_trace("message2 ended (originally ended at aMatchInd=" << aMatchInd << ").")
-        LOG_trace("message1 solution prefix: '" << decode(aCodeContinue.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
-        LOG_trace("message2 solution prefix: '" << decode(aCodeOther.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message1 solution prefix: '" << decode(aCode1.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
+        LOG_trace("message2 solution prefix: '" << decode(aCode2.substr(0, aKeyPrefix.size()), aKeyPrefix) << "'")
         stepNodes(
             aWordTree,
-            aContinue, aOther, 
-            aCodeContinue, aCodeOther,
+            aNode1, aNode2, 
+            aCode1, aCode2,
             aMatchInd,
             aKeyPrefix, aKeys,
             maxSteps,
@@ -272,8 +285,8 @@ void findKeys(Node* aWordTree, Node* aContinue, Node* aOther,
     // neither message ended
     stepNodes(
         aWordTree,
-        aContinue, aOther, 
-        aCodeContinue, aCodeOther,
+        aNode1, aNode2, 
+        aCode1, aCode2,
         aMatchInd,
         aKeyPrefix, aKeys,
         maxSteps,
@@ -298,7 +311,6 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
         LOG_error("error: findKeysWithClue: message clue was longer than code argument")
     }
 
-    int wordCnt = 0;
     Node* wordTree = new Node;
     //
     // read words from file and build word-tree.
@@ -344,7 +356,6 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
             treeIter = nextNode;
         }
         treeIter->markAsWord();
-        ++wordCnt;
     }
     wordsStream.close();
     }
@@ -360,12 +371,16 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
     Node* msg1Iter = wordTree;
     Node* msg2Iter = wordTree;
     int i = 0;
-    for( ; i < aMessage1Clue.size() ; ++i){
+    // aCode2 might be shorter than the clue,
+    // so here we only iterate to the clue's or code2's end(whichever is shorter), 
+    //  and then handle the rest of the clue separately
+    int preIterNum = std::min(aMessage1Clue.size(), aCode2.size());
+    for( ; i < preIterNum ; ++i){
         LOG_trace("i:" << i)
         // count clue iterating steps too against maxStepLimit(not just the recursive steps)
         ++step;
         char nextChar1 = aMessage1Clue.at(i);
-        // calculate the other char using the [msg1 - msg2 = code1 - code2] equality
+        // calculate the other char using the [msg1 - msg2 =_ code1 - code2] equality
         char nextChar2 = intToChar(expectedCharInd(nextChar1, aCode1.at(i), aCode2.at(i)));
         
         if(!msg1Iter){
@@ -384,9 +399,9 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
 
         int nextChar1Ind = charToInt(nextChar1);
         int nextChar2Ind = charToInt(nextChar2);
-        // if charInd is 26 (' ') then a new word has to be started in the continued message
+        // if charInd is 26 (' ') then a new word has to be started in the first message
         if(nextChar1Ind == 26){
-            LOG_trace("expecting a space here in the continued message. resetting next")
+            LOG_trace("expecting a space here in the first message. resetting next")
             msg1Iter = wordTree;
         }
         // if expInd is 26 (' ') then a new word has to be started in the other message
@@ -394,20 +409,40 @@ std::vector<string> findKeysWithClue(const string& aCode1, const string& aCode2,
             LOG_trace("expecting a space here in the other message. resetting otherNext")
             msg2Iter = wordTree;
         }
-        // both words might have a space at this place, meaning we continue from the root
-        if(nextChar1Ind == 26 && nextChar2Ind == 26){
-            LOG_deb("Both messages can end here. (index = " << i << ") continuing by trying all words at the remaining part. Might take a while!")
+    }
+    // if aMessage1Clue is longer than aCode2:
+    // we already dealt with aNode2, so we only need to step aNode1
+    for( ; i < aMessage1Clue.size() ; ++i){
+        LOG_trace("i:" << i)
+        // count clue iterating steps too against maxStepLimit(not just the recursive steps)
+        ++step;
+        char nextChar1 = aMessage1Clue.at(i);
+        
+        if(!msg1Iter){
+            LOG_deb("error-deb: findKeysWithClue: msg1Iter was null")
+            LOG_error("error: findKeysWithClue: while iterating clue (see debug log if exists)")
+            assert(false);
+        }
+        msg1Iter = msg1Iter->nodeAtChar(nextChar1);
+
+        int nextChar1Ind = charToInt(nextChar1);
+        // if charInd is 26 (' ') then a new word has to be started in the first message
+        if(nextChar1Ind == 26){
+            LOG_trace("expecting a space here in the first message. resetting next")
+            msg1Iter = wordTree;
         }
     }
-    // note aMessage1Clue migh be longer than message2
 
     //
-    // find possible endings
+    // find possible endings with findKeys
     //
+
+    // initialize the pass key using the clue
+    string keyPrefix = calcKey(aCode1, aMessage1Clue);
     findKeys(
         wordTree, msg2Iter, msg1Iter,
         aCode2, aCode1, i,
-        calcKey(aCode1, aMessage1Clue),
+        keyPrefix,
         possibleKeys,
         maxSteps,
         step,
