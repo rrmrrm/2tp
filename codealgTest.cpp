@@ -574,5 +574,3 @@ TEST(CodeAlg, findKeysWithClue_generated_good_keys_only){
         }
     }
 }
-/// TODO: generated tests
-/// TODO: keys  only encode valid messages(words from the file) and they also encode finds keyLen long part of the key

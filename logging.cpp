@@ -21,5 +21,5 @@ std::ostream& operator<<(std::ostream& os, const TABT& t){
     }
     return os;
 }
-TABT DEB_TAB;
+TABT TRACE_TAB;
 } // namespace logging

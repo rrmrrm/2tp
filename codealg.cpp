@@ -152,7 +152,7 @@ void stepNodes(
                 next2 = aRoot;
             }
             if(nextChar1Ind == 26 && nextCharInd2 == 26){
-                LOG_deb("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
+                LOG_trace("Both messages can end here. (index = " << aMatchInd << ") continuing by trying all words at the remaining part. Might take a while!")
             }
             char keyChar = calcKey(string()+aCode1.at(aMatchInd), string()+nextChar1).at(0);
             //append the new character we are triing

@@ -23,7 +23,7 @@ int main(){
             << "msg2: '" << msg2 << "'" << std::endl
             << "code2: '" << code2 << "'" << std::endl
             << "clue for msg1: '" << clue_msg1 << "'" << std::endl)
-    auto keys = findKeysWithClue(code1, code2, clue_msg1);
+    auto keys = findKeysWithClue(code1, code2, clue_msg1, 100000, 100000);
 
 
 
