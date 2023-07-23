@@ -25,7 +25,7 @@ Node* Node::nodeAtInd(int aInd) const {
     if(aInd<0 || aInd >= CHILD_MAX){
         LOG_deb("error-deb: Node::nodeAtInd: invalid aInd: '"
                 << aInd << "'" )
-        LOG_error("error: (see debug log if exists)")
+        LOG_error("error: nodeAtInd (see debug log if exists)")
         assert(false);
     }
     return mChildren[aInd];
