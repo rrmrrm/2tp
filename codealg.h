@@ -5,21 +5,34 @@
 using std::string;
 
 namespace codealg{
-// calculates the code aMessage using aKey as key (encoding)
-// if aMessage is longer than aKey, then exits while logging an error
-string encode(const string& aMessage, const string& aKey);
-// returns the message from aCode and aKey (solving for code)
-// if aCode is longer than aKey, then exits while logging an error
-string decode(const string& aCode, const string& aKey);
-// returns the key from aCode and aMessage (solving for key)
-// the returned key will be as long as the shorter parameter
-string calcKey(const string& aCode, const string& aMessage);
 
+/// @brief  calculates the code  for aMessage using aKey as key (encoding)
+/// if aMessage is longer than aKey, then exits while logging an error
+/// @param aMessage 
+/// @param aKey 
+/// @return the code
+string encode(const string& aMessage, const string& aKey);
+
+/// @brief  returns the message from aCode and aKey (solving for code)
+/// if aCode is longer than aKey, then exits while logging an error
+/// @param aCode 
+/// @param aKey 
+/// @return the calcluated message
+string decode(const string& aCode, const string& aKey);
+
+/// @brief returns the key from aCode and aMessage (solving for key)
+/// the returned key will be as long as the shorter parameter
+/// @param aCode 
+/// @param aMessage 
+/// @return the calculated key
+string calcKey(const string& aCode, const string& aMessage);
 
 /// @brief returns possible keys assuming the first message starts with aMessage1Clue 
 /// @param aCode1 // first code
 /// @param aCode2 // second code
-/// @param aMessage1Clue the start of message1
+/// @param aMessage1Start the start of message1
+/// @param maxSteps // stop after maxSteps calls
+/// @param maxKeys // stop after finding maxKeys possible keys
 /// @return possible keys assuming the first message starts with aMessage1Clue 
 std::vector<string> findKeysWithClue(
     const string& aCode1,
@@ -30,7 +43,7 @@ std::vector<string> findKeysWithClue(
 
 
 //
-// helper functions to transform characters to integer-codes:
+// helper functions to transform characters to integer-codes and back:
 //
 
 // 
