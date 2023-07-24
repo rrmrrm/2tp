@@ -17,18 +17,22 @@ TEST(shouldpass, shouldpass){
 //
 // tests for encode:
 //
+
+/// @brief  encode('a' + ' ') should yield ' ' since the character-index of 'a' is 0
 TEST(CodeAlg, encode1char_case1){
     string message = "a";
     string key = " ";
     string code = encode(message, key);
     EXPECT_EQ(code , " ");
 }
+/// @brief 'b'+'c' ~ 1+2 = 3 ~ 'd'
 TEST(CodeAlg, encode1char_case2){
     string message = "b";
     string key = "c";
     string code = encode(message, key);
     EXPECT_EQ(code , "d");
 }
+/// @brief ' ' + ' ' ~ 26+26 = 27-1-1=25 ~ 'z'  (mod27)
 TEST(CodeAlg, encode1char_case3){
     string message = " ";
     string key = " ";
@@ -41,6 +45,10 @@ TEST(CodeAlg, encode){
     string code = encode(message, key);
     EXPECT_EQ(code , "hfnosauzun");
 }
+/// @brief 
+/// given: the key is longer than the message 
+/// when: calling encode(message, key)
+/// then: the resulting code should be the same as encode(message, key.substr(0,len(msg)))
 TEST(CodeAlg, encodeLongKey){
     string message = "helloworld";
     string key = "abcdefgijkLONGKEY";
@@ -361,6 +369,8 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs2){
     EXPECT_EQ(*foundIt, subKey);
 }
 
+/// TODO: this test is still failing. 
+/// it seems the original key is not in the first 10000000 found keys
 /// @brief
 /// test wheter findKeysWithClue finds the original key
 /// given long messages size
@@ -390,6 +400,7 @@ TEST(CodeAlg, findKeysWithClue_msg_len_differs3){
 }
 
 /// @brief 
+/// helper for the randomized test
 /// generates a random aLen long string with a-z and space characters
 /// @param aLen 
 /// @return 
@@ -402,6 +413,7 @@ string randStr(int aLen){
 }
 
 /// @brief 
+/// helper for the randomized test
 /// generates a string that's around aMsgBallpark long and consists of elements of aWords
 /// the generated string might be longer than aMsgBallpark
 /// @param aMsgBallpark 
@@ -427,6 +439,17 @@ string genMessage(int aMsgBallpark, std::vector<string> aWords){
     }
     return message;
 }
+/// @brief generates randomized tests.
+/// in each test:
+///   generates a message pair(using words list file) and a clue(a starting substring of the fist message ),
+///    and a key,
+///   and uses these to create code-pairs.
+///   Then runs the codealg::findKeysWithClue to create a list of keys that might have been used to create the code-pair
+///   Then tests if decoding the codes with the reuturned keys results in valid messages(concatenation of english words)
+///   Also checks if the first message starts with the given message clue.
+///
+///   does NOT test if the original key was also found, but it produces a warning otherwise("warning: findKeysWithClue didn't find the original key")
+///  
 TEST(CodeAlg, findKeysWithClue_generated_good_keys_only){
     //
     // read the words from a file into containers
@@ -470,7 +493,9 @@ TEST(CodeAlg, findKeysWithClue_generated_good_keys_only){
     // generate key, code1, code2 triplets and test findKeysWithClue on them
     //
     srand(0);
+    /// number of generated testcases:
     int tests = 100;
+    /// upper limit for generated messages
     int maxMsgLen = 1000;
 
     for(int i = 0 ; i < tests ; ++i){
@@ -511,11 +536,8 @@ TEST(CodeAlg, findKeysWithClue_generated_good_keys_only){
         if(foundIt == keys.end()){
             LOG_warn("warning: findKeysWithClue didn't find the original key")
         }
-        //
-        // test if encoding with found keys yields sentence-pairs(message-pairs) that are:
-        //   and the first message starts with msg1Clue, 
-        //   and syntactically correct,
-        //
+        // test if encoding with found keys yields sentence-pairs(message-pairs) where
+        // the first message starts with msg1Clue, and syntactically correct,
         for(const auto& keyIt: keys){
             auto decoded1 = decode(code1, keyIt);
             auto decoded2 = decode(code2, keyIt);

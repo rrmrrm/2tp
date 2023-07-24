@@ -1,4 +1,9 @@
 # 2tp breaker
+
+The program uses c++ language,
+cmake for building 
+and gtest (Google Test library) for testing
+
 ## projects
 > Main
 
@@ -52,6 +57,8 @@ Textfile containing the list of words that can appear in the messages.
 
 ```cmake --build build```
 ## before running (ubuntu)
+The program expects the word listing file in the ./build/words.txt file (relative to the active dir), unless WORDS_TXT_FULLPATH environment variable is setup.
+Either make sure the word listing file is in the right dir, or give the following command:
 ```export WORDS_TXT_FULLPATH="<path_to_words_file"```
 ## run tests:
 ```<path_to_project_dir>/build/CodealgTest```
@@ -123,7 +130,3 @@ Feltételezzük, hogy az üzenetekben használt összes szó megtalálható a sz
 Előfordulhat, hogy több kulcs is értelmesnek látszó eredményt ad, ilyenkor a függvény az összes lehetséges kulcsot adja vissza!
 
 -------------------------------------------
-
-A megoldások tetszőleges fejlesztési környezetben készíthetőek.
-
-Ha lehetséges, akkor a választott környezetben elterjedt tesztesetekkel (pl. Java esetén JUnit) legyen a függvények működése bemutatva.

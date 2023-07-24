@@ -49,7 +49,7 @@ std::vector<string> findKeysWithClue(
 // 
 // int charToInt(char c):
 // c has to be lowercase alphabetic or space character
-// Returns the index of c according to the following rules:
+// Returns the character-index of c according to the following rules:
 //   the index of an  alphabetic char is its place in the alphabet minus one(0 for a, 25 for z)
 //   the index of space is 26
 int charToInt(char c);
@@ -57,6 +57,6 @@ int charToInt(char c);
 // char intToChar(int aInd):
 // aInd has to be in [0,26] (inclusive) range
 // intToChar is the inverse function of charToInt.
-// Returns the alphabetic character or space corresponging to the index
+// Returns the alphabetic character or space corresponding to the character-index
 char intToChar(int aInd);
 }
